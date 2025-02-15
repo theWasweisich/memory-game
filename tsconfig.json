@@ -1,0 +1,13 @@
+{
+    "include": [
+        "typescript/*"
+    ],
+    "compilerOptions": {
+        "outDir": "scripts/",
+        "target": "ES2024",
+        "module": "CommonJS",
+        "sourceMap": false,
+        "noImplicitAny": true,
+        "alwaysStrict": true
+    },
+}

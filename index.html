@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory</title>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="assets/fonts/fonts.css">
+
+    <script src="scripts/script.js" defer></script>
+    <script src="scripts/misc.js"></script>
+
+    <link rel="shortcut icon" href="unknownCard.png" type="image/png">
+</head>
+
+
+<body ondragstart="return false;">
+    <aside id="sidebar">
+        <fieldset id="dev-container" hidden>
+            <legend>"Hilfestellungen"</legend>
+            <button class="dev-btn" onclick="DevTools.toggleDevMode();">Hinweise</button>
+            <button class="dev-btn" onclick="DevTools.flipAll();">flip all</button>
+        </fieldset>
+        <div id="scoreboard">
+            <template id="player-template">
+                <div>
+                    <h2 class="player-name"></h2>
+                    <p class="points-display">
+                        Punkte: <span class="punkte-count">0</span>
+                    </p>
+                </div>
+            </template>
+            <button onclick="window.location.reload();">Restart</button>
+        </div>
+    </aside>
+    <main>
+        <header>
+            <div id="header-box">
+                <h1>Memory-Spiel</h1>
+                <p>Runde: <span id="runden-counter">1</span></p>
+            </div>
+        </header>
+        <div id="memoryFeld">
+            <template id="card-template">
+                <div class="memory-card">
+                    <img src="unknownCard.png" alt="Memorykarte">
+                </div>
+            </template>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,91 @@
+{
+    "images": [
+        {
+            "url": "assets/images/squirrel-8536537_1280.jpg",
+            "name": "Squirrel"
+        },
+        {
+            "url": "assets/images/colorful-2468874_1280.jpg",
+            "name": "Colorful"
+        },
+        {
+            "url": "assets/images/leaf-8483401_1280.jpg",
+            "name": "Leaf"
+        },
+        {
+            "url": "assets/images/city-7629244_1280.jpg",
+            "name": "City"
+        },
+        {
+            "url": "assets/images/sunflowers-3292932_1280.jpg",
+            "name": "Sunflowers"
+        },
+        {
+            "url": "assets/images/tree-3358468_1280.jpg",
+            "name": "Tree"
+        },
+        {
+            "url": "assets/images/lily-8157895_960_720.jpg",
+            "name": "Lily"
+        },
+        {
+            "url": "assets/images/cat-8600417_960_720.jpg",
+            "name": "Cat"
+        },
+        {
+            "url": "assets/images/dog-1839808_960_720.jpg",
+            "name": "Dog"
+        },
+        {
+            "url": "assets/images/swan-9122726_640.jpg",
+            "name": "Swan"
+        },
+        {
+            "url": "assets/images/hills-2836301_640.jpg",
+            "name": "Hills"
+        },
+        {
+            "url": "assets/images/nature-3082832_640.jpg",
+            "name": "Nature"
+        },
+        {
+            "url": "assets/images/sunset-7133867_640.jpg",
+            "name": "Sunset"
+        },
+        {
+            "url": "assets/images/bluebird-5818893_640.jpg",
+            "name": "Bluebird"
+        },
+        {
+            "url": "assets/images/playing-cards-9322164_1280.jpg",
+            "name": "Playing Cards"
+        },
+        {
+            "url": "assets/images/glass-building-6901990_1280.jpg",
+            "name": "Glass Building"
+        },
+        {
+            "url": "assets/images/K4x1ZL36xWCf6.webp",
+            "name": "Patrick Star eating a lot of burgers"
+        }
+    ],
+    "size": {
+        "cols": 3,
+        "rows": 4
+    },
+    "players": [
+        {
+            "name": "Spieler 1",
+            "color": "blue"
+        },
+        {
+            "name": "Spieler 2",
+            "color": "green"
+        }
+    ],
+    "enableHelp": true,
+    "displayedTexts": {
+        "winnerSingle": "Du hast gewonnen!",
+        "winnerMany": "{{ PLAYER }} hat gewonnen!"
+    }
+}

@@ -1,0 +1,98 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Data",
+    "type": "object",
+    "properties": {
+        "images": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "The url of the image"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the image",
+                        "examples": [
+                            "Squirrel",
+                            "Colorful",
+                            "Leaf",
+                            "City",
+                            "Sunflowers",
+                            "Tree",
+                            "Lily",
+                            "Cat",
+                            "Dog",
+                            "Swan",
+                            "Hills",
+                            "Nature",
+                            "Sunset",
+                            "Bluebird",
+                            "Playing Cards",
+                            "Glass Building",
+                            "Giphy"
+                        ]
+                    }
+                }
+            }
+        },
+        "size": {
+            "type": "object",
+            "properties": {
+                "cols": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "The amount of columns"
+                },
+                "rows": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "The amount of rows"
+                }
+            }
+        },
+        "players": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the player",
+                        "examples": [
+                            "Spieler 1",
+                            "Spieler 2"
+                        ]
+                    },
+                    "color": {
+                        "type": "string",
+                        "description": "A css valid color name"
+                    }
+                }
+            },
+            "minContains": 2
+        },
+        "enableHelp": {
+            "type": "boolean",
+            "description": "Enable the help button"
+        },
+        "displayedTexts": {
+            "type": "object",
+            "properties": {
+                "winnerSingle": {
+                    "type": "string",
+                    "default": "Du hast gewonnen!"
+                },
+                "winnerMany": {
+                    "type": "string",
+                    "default": "{{ PLAYER }} hat gewonnen!",
+                    "description": "Mehrere Spieler, gewinner ist \"{{ PLAYER }}\""
+                }
+            }
+        }
+    },
+    "additionalProperties": false,
+    "required": ["images", "size", "players", "displayedTexts", "enableHelp"]
+}
