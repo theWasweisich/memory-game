@@ -1,9 +1,9 @@
 {
     "include": [
-        "typescript/*"
+        "web/typescript/*"
     ],
     "compilerOptions": {
-        "outDir": "scripts/",
+        "outDir": "web/scripts/",
         "target": "ES2024",
         "module": "CommonJS",
         "sourceMap": false,
