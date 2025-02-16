@@ -1,20 +1,22 @@
 
 
 class DevTools {
+
+    
     static flipAll() {
         memoryCards.forEach((card: MemoryCardData) => {
             card.flipped = !card.flipped;
         });
         GameState.performFlips();
     }
-
+    
     static toggleDevMode() {
         isDevModeActive = !isDevModeActive;
-
+        
         if (!isDevModeActive) {
             GameState.setShadowHint(null, null);
         }
-
+        
         let turnBtn: HTMLButtonElement;
         for (const card of memoryCards) {
             turnBtn = card.element?.querySelector(".cheatdisplay");
@@ -33,7 +35,11 @@ abstract class GameState {
     static gameLocked: boolean = false;
     static roundsCounter: HTMLSpanElement;
     static currentRound: number = 1
-
+    static texts: {winnerSingle: string, winnerMultiple: string} = {
+        winnerMultiple: "",
+        winnerSingle: "",
+    };
+    
     static nextRound() {
         if (!(this.roundsCounter instanceof HTMLSpanElement)) {
             this.roundsCounter = document.getElementById("runden-counter") as HTMLSpanElement;
@@ -41,7 +47,7 @@ abstract class GameState {
         this.currentRound++;
         this.roundsCounter.innerText = this.currentRound.toString();
     }
-
+    
     static flipCard(card: MemoryCardData) {
         if (this.gameLocked || this.flippedCards.includes(card) || card.guessed) {
             return;
@@ -218,7 +224,6 @@ abstract class GameState {
 
     static checkGameOver() {
         if (this.getUnflippedCards().length <= 0) {
-            console.log("Game over!");
             let winner = this.#getWinner();
             setTimeout(() => {
                 GameState.showWinner(winner);
@@ -229,9 +234,9 @@ abstract class GameState {
     static showWinner(winner: Player) {
         let headingElement = document.getElementsByTagName("h1")[0];
         if (players.length === 1) {
-            headingElement.textContent = `Glückwunsch! Du hast gegen dich selbst gewonnen!`;
+            headingElement.textContent = GameState.texts.winnerSingle;
         } else {
-            headingElement.textContent = `Herzlichen Glückwunsch ${winner.displayName}, du hast gewonnen!`;
+            headingElement.textContent = GameState.texts.winnerMultiple.replace('{{ PLAYER }}', winner.displayName);
         }
     }
 
@@ -499,9 +504,16 @@ async function init() {
         (document.getElementById("dev-container")).hidden = false;
     }
 
+    setTexts(data["displayedTexts"]);
+
     buildField(data["size"]["cols"], data["size"]["rows"]);
 
     buildPlayers(data["players"]);
+}
+
+function setTexts(jsonTexts: any) {
+    GameState.texts.winnerSingle = jsonTexts["winnerSingle"];
+    GameState.texts.winnerMultiple = jsonTexts["winnerMany"];
 }
 
 init();

@@ -44,12 +44,12 @@
                 "cols": {
                     "type": "integer",
                     "minimum": 1,
-                    "description": "The amount of columns"
+                    "description": "The amount of columns. Has to be bigger than rows"
                 },
                 "rows": {
                     "type": "integer",
                     "minimum": 1,
-                    "description": "The amount of rows"
+                    "description": "The amount of rows. Has to be smaller than columns"
                 }
             }
         },

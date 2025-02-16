@@ -1,6 +1,6 @@
 :root {
     box-sizing: border-box;
-    --sidebar-width: 20%;
+    --sidebar-width: 10%;
 }
 
 html, body {
@@ -17,8 +17,9 @@ body {
 }
 
 #sidebar {
-    position: fixed;
-    width: var(--sidebar-width);
+    position: static;
+    float: left;
+    width: fit-content;
     padding-left: 1.2rem;
     padding-right: .7rem;
     height: 100%;
@@ -48,8 +49,9 @@ main {
     display: flex;
     flex-flow: column;
     align-items: center;
-    margin-left: var(--sidebar-width);
-    max-height: 100%;
+    min-width: 0;
+    height: 100%;
+    /* overflow-y: hidden; */
 }
 
 header {
@@ -67,28 +69,29 @@ header {
 
 
 #memoryFeld {
+    /* --anz-rows und --anz-cols wird von javascript gesetzt! */
     --anz-rows: 3;
     --anz-cols: 4;
 
     display: grid;
-    grid-template-columns: repeat(var(--anz-cols), minmax(100px, 1fr));
-    grid-template-rows: repeat(var(--anz-rows), minmax(100px, 1fr));
-    gap: 20px;
-    padding: 5rem;
-    align-content: center;
-    justify-content: center;
+    grid-template-columns: repeat(var(--anz-cols), minmax(min(50px, 100%), 150px));
+    gap: .2rem;
+    padding: 2rem;
 }
 
 .memory-card {
     aspect-ratio: 1;
-    overflow: hidden;
+    /* overflow: hidden; */
 
-    background-color: rgb(240, 240, 240);
-    border-radius: 5px;
-    padding: 5px;
+    background-color: rgb(
+        from gray 
+        calc(1.5*r) calc(1.5*g) calc(1.5*b)
+        );
+
+    border-radius: .313rem;
+    padding: .313rem;
     display: flex;
-    flex-direction: column;
-    /* max-height: 200px; */
+    align-content: center;
     justify-content: center;
     cursor: pointer;
     
@@ -104,7 +107,7 @@ header {
     /* font-size: larger; */
     /* margin: 0; */
     --arrow-color: #777;
-    --arrow-size: 10px;
+    --arrow-size: .625rem;
 
     &.active {
         &:not(.only-player)::before { /* marker triangle */

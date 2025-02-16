@@ -29,6 +29,10 @@ class GameState {
     static gameLocked = false;
     static roundsCounter;
     static currentRound = 1;
+    static texts = {
+        winnerMultiple: "",
+        winnerSingle: "",
+    };
     static nextRound() {
         if (!(this.roundsCounter instanceof HTMLSpanElement)) {
             this.roundsCounter = document.getElementById("runden-counter");
@@ -199,7 +203,6 @@ class GameState {
     }
     static checkGameOver() {
         if (this.getUnflippedCards().length <= 0) {
-            console.log("Game over!");
             let winner = this.#getWinner();
             setTimeout(() => {
                 GameState.showWinner(winner);
@@ -209,10 +212,10 @@ class GameState {
     static showWinner(winner) {
         let headingElement = document.getElementsByTagName("h1")[0];
         if (players.length === 1) {
-            headingElement.textContent = `Glückwunsch! Du hast gegen dich selbst gewonnen!`;
+            headingElement.textContent = GameState.texts.winnerSingle;
         }
         else {
-            headingElement.textContent = `Herzlichen Glückwunsch ${winner.displayName}, du hast gewonnen!`;
+            headingElement.textContent = GameState.texts.winnerMultiple.replace('{{ PLAYER }}', winner.displayName);
         }
     }
     /**
@@ -432,7 +435,12 @@ async function init() {
     if (data["enableHelp"]) {
         (document.getElementById("dev-container")).hidden = false;
     }
+    setTexts(data["displayedTexts"]);
     buildField(data["size"]["cols"], data["size"]["rows"]);
     buildPlayers(data["players"]);
+}
+function setTexts(jsonTexts) {
+    GameState.texts.winnerSingle = jsonTexts["winnerSingle"];
+    GameState.texts.winnerMultiple = jsonTexts["winnerMany"];
 }
 init();
