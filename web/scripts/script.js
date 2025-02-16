@@ -42,7 +42,7 @@ class GameState {
         this.roundsCounter.innerText = this.currentRound.toString();
     }
     static flipCard(card) {
-        if (this.gameLocked || this.flippedCards.includes(card) || card.guessed) {
+        if (GameState.gameLocked || GameState.flippedCards.includes(card) || card.guessed) {
             return;
         }
         card.element?.classList.add("flipped");
@@ -202,6 +202,11 @@ class GameState {
     }
     static checkGameOver() {
         if (GameState.getUnflippedCards().length <= 2) {
+            GameState.gameLocked = true;
+            let unflipped = GameState.getUnflippedCards();
+            for (const card of unflipped) {
+                GameState.flipCard(card);
+            }
             let winner = GameState.getWinner();
             GameState.showWinner(winner);
         }

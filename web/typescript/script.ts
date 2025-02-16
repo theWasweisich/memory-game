@@ -1,5 +1,3 @@
-
-
 class DevTools {
 
     
@@ -326,7 +324,6 @@ class Player {
     scoreValueElem: HTMLSpanElement;
     nameTextElem: HTMLElement;
     private _score: number;
-    private _isOnlyChild: boolean;
 
     constructor(name: string, color: string) {
         this.displayName = name
@@ -345,9 +342,9 @@ class Player {
     
     incrementScore() { this.setScore(this._score + 1); }
     
-    private setScore(score: number) { this._score = score; this.updateScore(); }
+    protected setScore(score: number) { this._score = score; this.updateScore(); }
     
-    private updateScore() { this.scoreValueElem.innerText = this.score.toString(); }
+    protected updateScore() { this.scoreValueElem.innerText = this.score.toString(); }
 
     static createPlayerElement(player: Player, singlePlayer?: boolean) {
         const playerTmplt: HTMLTemplateElement = document.getElementById("player-template") as HTMLTemplateElement;
@@ -374,7 +371,6 @@ class Player {
             this.nameTextElem.classList.remove("active");
         }
     }
-
 }
 
 function preloadImages(images: Array<Image_>) {
