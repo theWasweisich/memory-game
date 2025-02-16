@@ -133,17 +133,16 @@ class GameState {
         card1.guessed = true;
         card2.guessed = true;
         this.flippedCards = [];
-        this.setCardsStyle(card1, card2, "background-color", this.getCurrentPlayer().color);
-        this.setCardsStyle(card1, card2, "filter", "opacity(0.5)");
+        card1.element.classList.add("guessed");
+        card2.element.classList.add("guessed");
+        card1.element.style.setProperty("--guessed-color", GameState.getCurrentPlayer().color);
+        card2.element.style.setProperty("--guessed-color", GameState.getCurrentPlayer().color);
         this.getCurrentPlayer().incrementScore();
         this.checkGameOver();
     }
-    static setCardsStyle(card1, card2, property, value) {
-        card1.element.style.setProperty(property, value);
-        card2.element.style.setProperty(property, value);
-    }
     static resetFlippedCards() {
         this.flippedCards.forEach(card => { card.flipped = false; });
+        GameState.flippedCards.forEach(card => { card.element.classList.remove("flipped"); });
         this.performFlips();
         this.flippedCards = [];
         this.gameLocked = false;
@@ -202,11 +201,9 @@ class GameState {
         throw Error();
     }
     static checkGameOver() {
-        if (this.getUnflippedCards().length <= 0) {
-            let winner = this.#getWinner();
-            setTimeout(() => {
-                GameState.showWinner(winner);
-            }, 1500);
+        if (GameState.getUnflippedCards().length <= 2) {
+            let winner = GameState.getWinner();
+            GameState.showWinner(winner);
         }
     }
     static showWinner(winner) {
@@ -222,7 +219,7 @@ class GameState {
      *
      * @returns {string} The players name
      */
-    static #getWinner() {
+    static getWinner() {
         let maxGuesses = 0;
         let winner = undefined;
         for (const player of players) {
@@ -374,7 +371,6 @@ function loadMemoryCards(numOfCards) {
         throw new Error(`There are not enough Images for this board size! Need ${neededImages} extra images`);
     }
     preloadImages(images);
-    shuffleArray(availableImages);
     usedImages = returnRandomImages(numOfPairs);
     console.log(`Used ${usedImages.length}/${images.length} images`);
     for (let i = 0; i < numOfPairs; i++) {
@@ -390,7 +386,9 @@ function buildField(cols, rows) {
     memoryFeld.style.setProperty("--anz-rows", rows.toString());
     memoryFeld.style.setProperty("--anz-cols", cols.toString());
     loadMemoryCards(rows * cols);
-    shuffleArray(memoryCards);
+    for (let index = 0; index < Math.random() * 10; index++) {
+        shuffleArray(memoryCards);
+    }
     for (const card of memoryCards) {
         card.buildCard(memoryField);
     }

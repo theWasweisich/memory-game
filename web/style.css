@@ -67,6 +67,19 @@ header {
     }
 }
 
+.restart-btn {
+    padding: 1rem;
+    transition: 
+        box-shadow .1s,
+        border-color .1s,
+        transform .1s;
+
+    &:hover {
+        border-color: red;
+        box-shadow: .1rem .1rem .6rem red;
+        transform: scale(110%);
+    }
+}
 
 #memoryFeld {
     /* --anz-rows und --anz-cols wird von javascript gesetzt! */
@@ -94,10 +107,21 @@ header {
     align-content: center;
     justify-content: center;
     cursor: pointer;
+    transition: 
+        transform 100ms,
+        background-color 500ms;
     
-    img {
+    > img {
         object-fit: contain;
         overflow: hidden;
+    }
+
+    &.flipped {
+        transform: scale(.9);
+    }
+
+    &.guessed {
+        background-color: rgb(from var(--guessed-color) calc(r*.5) calc(g*.5) calc(b*.5));
     }
 }
 

@@ -49,7 +49,7 @@ abstract class GameState {
     }
     
     static flipCard(card: MemoryCardData) {
-        if (this.gameLocked || this.flippedCards.includes(card) || card.guessed) {
+        if (GameState.gameLocked || GameState.flippedCards.includes(card) || card.guessed) {
             return;
         }
 
@@ -146,19 +146,19 @@ abstract class GameState {
         card1.guessed = true;
         card2.guessed = true;
         this.flippedCards = [];
-        this.setCardsStyle(card1, card2, "background-color", this.getCurrentPlayer().color);
-        this.setCardsStyle(card1, card2, "filter", "opacity(0.5)");
+        card1.element.classList.add("guessed");
+        card2.element.classList.add("guessed");
+
+        card1.element.style.setProperty("--guessed-color", GameState.getCurrentPlayer().color);
+        card2.element.style.setProperty("--guessed-color", GameState.getCurrentPlayer().color);
+
         this.getCurrentPlayer().incrementScore();
         this.checkGameOver();
     }
 
-    static setCardsStyle(card1: MemoryCardData, card2: MemoryCardData, property: string, value: string) {
-        card1.element.style.setProperty(property, value);
-        card2.element.style.setProperty(property, value);
-    }
-
     static resetFlippedCards() {
         this.flippedCards.forEach(card => { card.flipped = false });
+        GameState.flippedCards.forEach(card => { card.element.classList.remove("flipped") });
         this.performFlips();
         this.flippedCards = [];
         this.gameLocked = false;
@@ -223,11 +223,14 @@ abstract class GameState {
     }
 
     static checkGameOver() {
-        if (this.getUnflippedCards().length <= 0) {
-            let winner = this.#getWinner();
-            setTimeout(() => {
-                GameState.showWinner(winner);
-            }, 1500);
+        if (GameState.getUnflippedCards().length <= 2) {
+            GameState.gameLocked = true;
+            let unflipped = GameState.getUnflippedCards();
+            for (const card of unflipped) {
+                GameState.flipCard(card);
+            }
+            let winner = GameState.getWinner();
+            GameState.showWinner(winner);
         }
     }
 
@@ -244,7 +247,7 @@ abstract class GameState {
      * 
      * @returns {string} The players name
      */
-    static #getWinner(): Player {
+    static getWinner(): Player {
         let maxGuesses = 0;
         let winner = undefined;
         for (const player of players) {
@@ -424,8 +427,6 @@ function loadMemoryCards(numOfCards: number): void {
     }
     preloadImages(images);
 
-
-    shuffleArray(availableImages);
     usedImages = returnRandomImages(numOfPairs);
 
     console.log(`Used ${usedImages.length}/${images.length} images`);
@@ -448,7 +449,10 @@ function buildField(cols: number, rows: number) {
     memoryFeld.style.setProperty("--anz-cols", cols.toString());
 
     loadMemoryCards(rows * cols);
-    shuffleArray(memoryCards);
+
+    for (let index = 0; index < Math.random()*10; index++) {
+        shuffleArray(memoryCards);
+    }
 
     for (const card of memoryCards) {
         card.buildCard(memoryField);
