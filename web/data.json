@@ -70,8 +70,8 @@
         }
     ],
     "size": {
-        "cols": 3,
-        "rows": 4
+        "cols": 4,
+        "rows": 3
     },
     "players": [
         {
@@ -83,9 +83,9 @@
             "color": "green"
         }
     ],
-    "enableHelp": true,
     "displayedTexts": {
         "winnerSingle": "Du hast gewonnen!",
         "winnerMany": "{{ PLAYER }} hat gewonnen!"
-    }
+    },
+    "enableHelp": true
 }
