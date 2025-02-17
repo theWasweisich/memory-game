@@ -1,6 +1,23 @@
 
 
-class DevTools {
+abstract class DevTools {
+    static isDevModeActive: boolean = false
+
+    static loadPreference(): void {
+        let pref = localStorage.getItem("devmode__hints");
+        if (pref === null) {
+            // No preference has been set yet
+        }
+        if (pref === "yes") {
+            this.setDevMode(true);
+        } else {
+            this.setDevMode(false);
+        }
+    }
+
+    static savePreference(hints: boolean): void {
+        localStorage.setItem("devmode__hints", hints ? "yes" : "no");
+    }
 
     
     static flipAll() {
@@ -9,23 +26,26 @@ class DevTools {
         });
         GameState.performFlips();
     }
-    
-    static toggleDevMode() {
-        isDevModeActive = !isDevModeActive;
-        
-        if (!isDevModeActive) {
+
+    static setDevMode(on: boolean) {
+        if (!on) {
             GameState.setShadowHint(null, null);
         }
         
         let turnBtn: HTMLButtonElement;
         for (const card of memoryCards) {
             turnBtn = card.element?.querySelector(".cheatdisplay");
-            if (isDevModeActive) {
+            if (on) {
                 turnBtn.innerText += " " + card.pairId.toString();
             } else {
                 turnBtn.innerText = turnBtn.dataset.default;
             }
         }
+    }
+    
+    static toggleDevMode() {
+        isDevModeActive = !isDevModeActive;
+        this.setDevMode(isDevModeActive);
     }
 }
 
@@ -374,7 +394,6 @@ class Player {
             this.nameTextElem.classList.remove("active");
         }
     }
-
 }
 
 function preloadImages(images: Array<Image_>) {

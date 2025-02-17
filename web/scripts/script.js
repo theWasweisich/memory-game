@@ -1,26 +1,45 @@
 "use strict";
 class DevTools {
+    static isDevModeActive = false;
+    static loadPreference() {
+        let pref = localStorage.getItem("devmode__hints");
+        if (pref === null) {
+            // No preference has been set yet
+        }
+        if (pref === "yes") {
+            this.setDevMode(true);
+        }
+        else {
+            this.setDevMode(false);
+        }
+    }
+    static savePreference(hints) {
+        localStorage.setItem("devmode__hints", hints ? "yes" : "no");
+    }
     static flipAll() {
         memoryCards.forEach((card) => {
             card.flipped = !card.flipped;
         });
         GameState.performFlips();
     }
-    static toggleDevMode() {
-        isDevModeActive = !isDevModeActive;
-        if (!isDevModeActive) {
+    static setDevMode(on) {
+        if (!on) {
             GameState.setShadowHint(null, null);
         }
         let turnBtn;
         for (const card of memoryCards) {
             turnBtn = card.element?.querySelector(".cheatdisplay");
-            if (isDevModeActive) {
+            if (on) {
                 turnBtn.innerText += " " + card.pairId.toString();
             }
             else {
                 turnBtn.innerText = turnBtn.dataset.default;
             }
         }
+    }
+    static toggleDevMode() {
+        isDevModeActive = !isDevModeActive;
+        this.setDevMode(isDevModeActive);
     }
 }
 class GameState {
@@ -42,7 +61,7 @@ class GameState {
         this.roundsCounter.innerText = this.currentRound.toString();
     }
     static flipCard(card) {
-        if (this.gameLocked || this.flippedCards.includes(card) || card.guessed) {
+        if (GameState.gameLocked || GameState.flippedCards.includes(card) || card.guessed) {
             return;
         }
         card.element?.classList.add("flipped");
@@ -202,6 +221,11 @@ class GameState {
     }
     static checkGameOver() {
         if (GameState.getUnflippedCards().length <= 2) {
+            GameState.gameLocked = true;
+            let unflipped = GameState.getUnflippedCards();
+            for (const card of unflipped) {
+                GameState.flipCard(card);
+            }
             let winner = GameState.getWinner();
             GameState.showWinner(winner);
         }
