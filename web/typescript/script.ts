@@ -1,10 +1,19 @@
 
 
 abstract class DevTools {
-    static isDevModeActive: boolean = false
+    static _isDevModeActive: boolean = false
+
+    static set isDevModeActive(value: boolean) {
+        DevTools._isDevModeActive = value;
+    }
+    
+    static get isDevModeActive() {
+        return DevTools._isDevModeActive;
+    }
 
     static loadPreference(): void {
         let pref = localStorage.getItem("devmode__hints");
+        console.log(`DevTools hints: ${pref}`);
         if (pref === null) {
             // No preference has been set yet
         }
@@ -14,38 +23,47 @@ abstract class DevTools {
             this.setDevMode(false);
         }
     }
-
+    
     static savePreference(hints: boolean): void {
         localStorage.setItem("devmode__hints", hints ? "yes" : "no");
     }
-
+    
     
     static flipAll() {
-        memoryCards.forEach((card: MemoryCardData) => {
-            card.flipped = !card.flipped;
+        GameState.memoryCards.forEach((card: MemoryCardData) => {
+            GameState.flipCard(card, true);
         });
-        GameState.performFlips();
     }
-
+    
     static setDevMode(on: boolean) {
         if (!on) {
             GameState.setShadowHint(null, null);
         }
-        
-        let turnBtn: HTMLButtonElement;
-        for (const card of memoryCards) {
-            turnBtn = card.element?.querySelector(".cheatdisplay");
-            if (on) {
-                turnBtn.innerText += " " + card.pairId.toString();
-            } else {
-                turnBtn.innerText = turnBtn.dataset.default;
-            }
-        }
+        DevTools.isDevModeActive = on;
+        document.getElementById("shadow-hints-btn").classList.toggle("on", on);
+        console.log(`isDevModeActive = ${on} `);
     }
     
     static toggleDevMode() {
-        isDevModeActive = !isDevModeActive;
-        this.setDevMode(isDevModeActive);
+        DevTools.isDevModeActive = !DevTools.isDevModeActive;
+        DevTools.savePreference(DevTools.isDevModeActive);
+        DevTools.setDevMode(DevTools.isDevModeActive);
+    }
+
+    static pprintMemoryCards() {
+        for (let i = 0; i < GameState.memoryCards.length; i++) {
+            const card = GameState.memoryCards[i];
+            console.groupCollapsed(`Card ${i}`);
+            console.log(`PairId: ${card.pairId}`);
+            console.log(`Guessed: ${card.guessed}`);
+            console.log(`Flipped: ${card.flipped}`);
+            console.group("Image");
+            console.log(card.image.alt);
+            console.log(card.image.url);
+            console.groupEnd();
+            console.log(card.element);
+            console.groupEnd();
+        }
     }
 }
 
@@ -59,6 +77,7 @@ abstract class GameState {
         winnerMultiple: "",
         winnerSingle: "",
     };
+    static memoryCards: Array<MemoryCardData> = [];
     
     static nextRound() {
         if (!(this.roundsCounter instanceof HTMLSpanElement)) {
@@ -68,9 +87,11 @@ abstract class GameState {
         this.roundsCounter.innerText = this.currentRound.toString();
     }
     
-    static flipCard(card: MemoryCardData) {
+    static flipCard(card: MemoryCardData, force?: boolean) {
         if (GameState.gameLocked || GameState.flippedCards.includes(card) || card.guessed) {
-            return;
+            if (!force) {
+                return;
+            }
         }
 
         card.element?.classList.add("flipped");
@@ -81,8 +102,8 @@ abstract class GameState {
             this.setShadowHint(null, null);
             this.checkForMatch();
         } else {
-            if (isDevModeActive) {
-                for (const card_ of memoryCards) {
+            if (DevTools.isDevModeActive) {
+                for (const card_ of GameState.memoryCards) {
                     if (card_.pairId === card.pairId) {
                         this.setShadowHint(card_, card);
                     }
@@ -95,14 +116,13 @@ abstract class GameState {
 
 
     static setShadowHint(card1: MemoryCardData, card2: MemoryCardData) {
-        let shadowValue = "black 0 0 5px";
         try {
             if (card1 === null || card2 === null) {
-                for (const card of memoryCards) {
+                for (const card of GameState.memoryCards) {
                     if (card.element === null) {
                         continue
                     }
-                    card.element.style.boxShadow = "none";
+                    card.element.classList.remove("shadow-hint")
                 }
                 return;
             }
@@ -110,12 +130,12 @@ abstract class GameState {
                 throw Error("Element is null!")
             }
 
-            if ((card1.flipped || card2.flipped) && isDevModeActive) {
-                card1.element.style.boxShadow = shadowValue;
-                card2.element.style.boxShadow = shadowValue;
+            if ((card1.flipped || card2.flipped) && DevTools.isDevModeActive) {
+                card1.element.classList.add("shadow-hint");
+                card2.element.classList.add("shadow-hint");
             } else {
-                card1.element.style.boxShadow = "none";
-                card2.element.style.boxShadow = "none";            
+                card1.element.classList.remove('shadow-hint');
+                card2.element.classList.remove('shadow-hint');
             }
         } catch (e) {
             return
@@ -153,7 +173,7 @@ abstract class GameState {
     }
 
     static setCursorStyle(style: string) {
-        for (const card of memoryCards) {
+        for (const card of GameState.memoryCards) {
             if (card.element === null) {
                 throw Error("Card element is null")
             }
@@ -162,18 +182,13 @@ abstract class GameState {
     }
 
     static onMatchFound(card1: MemoryCardData, card2: MemoryCardData) {
-        this.matchedPairs.push(card1.pairId);
-        card1.guessed = true;
-        card2.guessed = true;
-        this.flippedCards = [];
-        card1.element.classList.add("guessed");
-        card2.element.classList.add("guessed");
+        GameState.matchedPairs.push(card1.pairId);
+        card1.setGuessed(GameState.getCurrentPlayer());
+        card2.setGuessed(GameState.getCurrentPlayer());
+        GameState.flippedCards = [];
 
-        card1.element.style.setProperty("--guessed-color", GameState.getCurrentPlayer().color);
-        card2.element.style.setProperty("--guessed-color", GameState.getCurrentPlayer().color);
-
-        this.getCurrentPlayer().incrementScore();
-        this.checkGameOver();
+        GameState.getCurrentPlayer().incrementScore();
+        GameState.checkGameOver();
     }
 
     static resetFlippedCards() {
@@ -186,7 +201,7 @@ abstract class GameState {
 
 
     static performFlips() {
-        memoryCards.forEach(card => {
+        GameState.memoryCards.forEach(card => {
             if (card.element === null) {
                 throw Error("Card element is null")
             }
@@ -202,7 +217,7 @@ abstract class GameState {
 
 
     static getUnflippedCards() {
-        return memoryCards.filter(card => !card.flipped);
+        return GameState.memoryCards.filter(card => !card.flipped);
     }
 
     static markNextTurnPlayer() {
@@ -295,6 +310,7 @@ class MemoryCardData {
     flipped: boolean;
     element: HTMLElement;
     guessed: boolean;
+    guessedBy: Player;
 
     constructor(pairId: number, image: Image_, flipped: boolean) {
         this.pairId = pairId;
@@ -309,7 +325,7 @@ class MemoryCardData {
      * @returns Der Kartenpartner
      */
     getPair(): MemoryCardData {
-        for (const card of memoryCards) {
+        for (const card of GameState.memoryCards) {
             if (card.pairId === this.pairId) {
                 return card;
             }
@@ -335,6 +351,13 @@ class MemoryCardData {
         this.element = memoryField.lastElementChild as HTMLElement;
     
         return this.element;
+    }
+
+    setGuessed(guessedBy: Player) {
+        this.guessed = true;
+        this.guessedBy = guessedBy;
+        this.element.classList.add("guessed");
+        this.element.style.setProperty("--guessed-color", guessedBy.color);
     }
 }
 
@@ -396,10 +419,11 @@ class Player {
     }
 }
 
-function preloadImages(images: Array<Image_>) {
-    for (let i = 0; i < images.length; i++) {
-        let image = images[i];
-        console.debug("Preloading: " + image.url);
+function preloadImages(imgs: Array<Image_>) {
+    console.debug("Prefetching:");
+    console.debug(imgs);
+    for (let i = 0; i < imgs.length; i++) {
+        let image = imgs[i];
         let img = new Image();
         img.src = image.url;
         img.onload = () => {
@@ -408,7 +432,9 @@ function preloadImages(images: Array<Image_>) {
                 console.error(img);
                 console.error(image);
             } else {
-                console.log("Image loaded");
+                if (i == imgs.length-1) {
+                    document.getElementById("indicator").style.backgroundColor = "green";
+                };
             }
             if (img.naturalWidth === 0) {
                 console.error("Image width is 0 (something went wrong!)");
@@ -444,9 +470,9 @@ function loadMemoryCards(numOfCards: number): void {
         let neededImages = numOfPairs / availableImages.length;
         throw new Error(`There are not enough Images for this board size! Need ${neededImages} extra images`);
     }
-    preloadImages(images);
-
+    
     usedImages = returnRandomImages(numOfPairs);
+    preloadImages(usedImages);
 
     console.log(`Used ${usedImages.length}/${images.length} images`);
 
@@ -456,8 +482,8 @@ function loadMemoryCards(numOfCards: number): void {
         let card1 = new MemoryCardData(i, img, false);
         let card2 = new MemoryCardData(i, img, false);
 
-        memoryCards.push(card1);
-        memoryCards.push(card2);
+        GameState.memoryCards.push(card1);
+        GameState.memoryCards.push(card2);
     }
 }
 
@@ -470,10 +496,10 @@ function buildField(cols: number, rows: number) {
     loadMemoryCards(rows * cols);
 
     for (let index = 0; index < Math.random()*10; index++) {
-        shuffleArray(memoryCards);
+        shuffleArray(GameState.memoryCards);
     }
 
-    for (const card of memoryCards) {
+    for (const card of GameState.memoryCards) {
         card.buildCard(memoryField);
     }
 }
@@ -498,7 +524,7 @@ function buildPlayers(playerJSON: {name: string, color: string}[]) {
 
 async function getData(endpoint: string) {
     console.debug("Data endpoint: " + endpoint);
-    let res = await fetch(endpoint);
+    let res = await fetch(endpoint, { cache: "no-cache" });
     let jsonRes = await res.json();
     console.log(jsonRes);
     images = jsonRes["images"];
@@ -511,10 +537,8 @@ var usedImages: Array<Image_> = [];
 var defaultImage: HTMLImageElement = new Image();
 var memoryField: HTMLElement = document.getElementById("memoryFeld");
 var cardTemplate: HTMLTemplateElement = document.getElementById("card-template") as HTMLTemplateElement;
-var memoryCards: Array<MemoryCardData> = [];
 var scoreBoardElem: HTMLDivElement = document.getElementById("scoreboard") as HTMLDivElement;
 var players: Array<Player> = [];
-var isDevModeActive = false;
 
 
 
@@ -532,6 +556,8 @@ async function init() {
     buildField(data["size"]["cols"], data["size"]["rows"]);
 
     buildPlayers(data["players"]);
+
+    DevTools.loadPreference();
 }
 
 function setTexts(jsonTexts: any) {

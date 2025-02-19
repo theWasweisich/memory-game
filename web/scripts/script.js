@@ -1,8 +1,15 @@
 "use strict";
 class DevTools {
-    static isDevModeActive = false;
+    static _isDevModeActive = false;
+    static set isDevModeActive(value) {
+        DevTools._isDevModeActive = value;
+    }
+    static get isDevModeActive() {
+        return DevTools._isDevModeActive;
+    }
     static loadPreference() {
         let pref = localStorage.getItem("devmode__hints");
+        console.log(`DevTools hints: ${pref}`);
         if (pref === null) {
             // No preference has been set yet
         }
@@ -17,29 +24,37 @@ class DevTools {
         localStorage.setItem("devmode__hints", hints ? "yes" : "no");
     }
     static flipAll() {
-        memoryCards.forEach((card) => {
-            card.flipped = !card.flipped;
+        GameState.memoryCards.forEach((card) => {
+            GameState.flipCard(card, true);
         });
-        GameState.performFlips();
     }
     static setDevMode(on) {
         if (!on) {
             GameState.setShadowHint(null, null);
         }
-        let turnBtn;
-        for (const card of memoryCards) {
-            turnBtn = card.element?.querySelector(".cheatdisplay");
-            if (on) {
-                turnBtn.innerText += " " + card.pairId.toString();
-            }
-            else {
-                turnBtn.innerText = turnBtn.dataset.default;
-            }
-        }
+        DevTools.isDevModeActive = on;
+        document.getElementById("shadow-hints-btn").classList.toggle("on", on);
+        console.log(`isDevModeActive = ${on} `);
     }
     static toggleDevMode() {
-        isDevModeActive = !isDevModeActive;
-        this.setDevMode(isDevModeActive);
+        DevTools.isDevModeActive = !DevTools.isDevModeActive;
+        DevTools.savePreference(DevTools.isDevModeActive);
+        DevTools.setDevMode(DevTools.isDevModeActive);
+    }
+    static pprintMemoryCards() {
+        for (let i = 0; i < GameState.memoryCards.length; i++) {
+            const card = GameState.memoryCards[i];
+            console.groupCollapsed(`Card ${i}`);
+            console.log(`PairId: ${card.pairId}`);
+            console.log(`Guessed: ${card.guessed}`);
+            console.log(`Flipped: ${card.flipped}`);
+            console.group("Image");
+            console.log(card.image.alt);
+            console.log(card.image.url);
+            console.groupEnd();
+            console.log(card.element);
+            console.groupEnd();
+        }
     }
 }
 class GameState {
@@ -52,6 +67,7 @@ class GameState {
         winnerMultiple: "",
         winnerSingle: "",
     };
+    static memoryCards = [];
     static nextRound() {
         if (!(this.roundsCounter instanceof HTMLSpanElement)) {
             this.roundsCounter = document.getElementById("runden-counter");
@@ -60,9 +76,11 @@ class GameState {
         this.currentRound++;
         this.roundsCounter.innerText = this.currentRound.toString();
     }
-    static flipCard(card) {
+    static flipCard(card, force) {
         if (GameState.gameLocked || GameState.flippedCards.includes(card) || card.guessed) {
-            return;
+            if (!force) {
+                return;
+            }
         }
         card.element?.classList.add("flipped");
         card.flipped = true;
@@ -72,8 +90,8 @@ class GameState {
             this.checkForMatch();
         }
         else {
-            if (isDevModeActive) {
-                for (const card_ of memoryCards) {
+            if (DevTools.isDevModeActive) {
+                for (const card_ of GameState.memoryCards) {
                     if (card_.pairId === card.pairId) {
                         this.setShadowHint(card_, card);
                     }
@@ -83,27 +101,26 @@ class GameState {
         this.revealCard(card);
     }
     static setShadowHint(card1, card2) {
-        let shadowValue = "black 0 0 5px";
         try {
             if (card1 === null || card2 === null) {
-                for (const card of memoryCards) {
+                for (const card of GameState.memoryCards) {
                     if (card.element === null) {
                         continue;
                     }
-                    card.element.style.boxShadow = "none";
+                    card.element.classList.remove("shadow-hint");
                 }
                 return;
             }
             if (card1.element === null || card2.element === null) {
                 throw Error("Element is null!");
             }
-            if ((card1.flipped || card2.flipped) && isDevModeActive) {
-                card1.element.style.boxShadow = shadowValue;
-                card2.element.style.boxShadow = shadowValue;
+            if ((card1.flipped || card2.flipped) && DevTools.isDevModeActive) {
+                card1.element.classList.add("shadow-hint");
+                card2.element.classList.add("shadow-hint");
             }
             else {
-                card1.element.style.boxShadow = "none";
-                card2.element.style.boxShadow = "none";
+                card1.element.classList.remove('shadow-hint');
+                card2.element.classList.remove('shadow-hint');
             }
         }
         catch (e) {
@@ -140,7 +157,7 @@ class GameState {
         this.nextRound();
     }
     static setCursorStyle(style) {
-        for (const card of memoryCards) {
+        for (const card of GameState.memoryCards) {
             if (card.element === null) {
                 throw Error("Card element is null");
             }
@@ -148,16 +165,12 @@ class GameState {
         }
     }
     static onMatchFound(card1, card2) {
-        this.matchedPairs.push(card1.pairId);
-        card1.guessed = true;
-        card2.guessed = true;
-        this.flippedCards = [];
-        card1.element.classList.add("guessed");
-        card2.element.classList.add("guessed");
-        card1.element.style.setProperty("--guessed-color", GameState.getCurrentPlayer().color);
-        card2.element.style.setProperty("--guessed-color", GameState.getCurrentPlayer().color);
-        this.getCurrentPlayer().incrementScore();
-        this.checkGameOver();
+        GameState.matchedPairs.push(card1.pairId);
+        card1.setGuessed(GameState.getCurrentPlayer());
+        card2.setGuessed(GameState.getCurrentPlayer());
+        GameState.flippedCards = [];
+        GameState.getCurrentPlayer().incrementScore();
+        GameState.checkGameOver();
     }
     static resetFlippedCards() {
         this.flippedCards.forEach(card => { card.flipped = false; });
@@ -167,7 +180,7 @@ class GameState {
         this.gameLocked = false;
     }
     static performFlips() {
-        memoryCards.forEach(card => {
+        GameState.memoryCards.forEach(card => {
             if (card.element === null) {
                 throw Error("Card element is null");
             }
@@ -182,7 +195,7 @@ class GameState {
         });
     }
     static getUnflippedCards() {
-        return memoryCards.filter(card => !card.flipped);
+        return GameState.memoryCards.filter(card => !card.flipped);
     }
     static markNextTurnPlayer() {
         console.debug("next Turn!");
@@ -267,6 +280,7 @@ class MemoryCardData {
     flipped;
     element;
     guessed;
+    guessedBy;
     constructor(pairId, image, flipped) {
         this.pairId = pairId;
         this.image = image;
@@ -279,7 +293,7 @@ class MemoryCardData {
      * @returns Der Kartenpartner
      */
     getPair() {
-        for (const card of memoryCards) {
+        for (const card of GameState.memoryCards) {
             if (card.pairId === this.pairId) {
                 return card;
             }
@@ -302,6 +316,12 @@ class MemoryCardData {
         memoryField.appendChild(clone);
         this.element = memoryField.lastElementChild;
         return this.element;
+    }
+    setGuessed(guessedBy) {
+        this.guessed = true;
+        this.guessedBy = guessedBy;
+        this.element.classList.add("guessed");
+        this.element.style.setProperty("--guessed-color", guessedBy.color);
     }
 }
 class Player {
@@ -349,10 +369,11 @@ class Player {
         }
     }
 }
-function preloadImages(images) {
-    for (let i = 0; i < images.length; i++) {
-        let image = images[i];
-        console.debug("Preloading: " + image.url);
+function preloadImages(imgs) {
+    console.debug("Prefetching:");
+    console.debug(imgs);
+    for (let i = 0; i < imgs.length; i++) {
+        let image = imgs[i];
         let img = new Image();
         img.src = image.url;
         img.onload = () => {
@@ -362,7 +383,10 @@ function preloadImages(images) {
                 console.error(image);
             }
             else {
-                console.log("Image loaded");
+                if (i == imgs.length - 1) {
+                    document.getElementById("indicator").style.backgroundColor = "green";
+                }
+                ;
             }
             if (img.naturalWidth === 0) {
                 console.error("Image width is 0 (something went wrong!)");
@@ -394,15 +418,15 @@ function loadMemoryCards(numOfCards) {
         let neededImages = numOfPairs / availableImages.length;
         throw new Error(`There are not enough Images for this board size! Need ${neededImages} extra images`);
     }
-    preloadImages(images);
     usedImages = returnRandomImages(numOfPairs);
+    preloadImages(usedImages);
     console.log(`Used ${usedImages.length}/${images.length} images`);
     for (let i = 0; i < numOfPairs; i++) {
         let img = usedImages[i];
         let card1 = new MemoryCardData(i, img, false);
         let card2 = new MemoryCardData(i, img, false);
-        memoryCards.push(card1);
-        memoryCards.push(card2);
+        GameState.memoryCards.push(card1);
+        GameState.memoryCards.push(card2);
     }
 }
 function buildField(cols, rows) {
@@ -411,9 +435,9 @@ function buildField(cols, rows) {
     memoryFeld.style.setProperty("--anz-cols", cols.toString());
     loadMemoryCards(rows * cols);
     for (let index = 0; index < Math.random() * 10; index++) {
-        shuffleArray(memoryCards);
+        shuffleArray(GameState.memoryCards);
     }
-    for (const card of memoryCards) {
+    for (const card of GameState.memoryCards) {
         card.buildCard(memoryField);
     }
 }
@@ -436,7 +460,7 @@ function buildPlayers(playerJSON) {
 }
 async function getData(endpoint) {
     console.debug("Data endpoint: " + endpoint);
-    let res = await fetch(endpoint);
+    let res = await fetch(endpoint, { cache: "no-cache" });
     let jsonRes = await res.json();
     console.log(jsonRes);
     images = jsonRes["images"];
@@ -447,10 +471,8 @@ var usedImages = [];
 var defaultImage = new Image();
 var memoryField = document.getElementById("memoryFeld");
 var cardTemplate = document.getElementById("card-template");
-var memoryCards = [];
 var scoreBoardElem = document.getElementById("scoreboard");
 var players = [];
-var isDevModeActive = false;
 async function init() {
     defaultImage.src = "unknownCard.png";
     let data = await getData("data.json");
@@ -460,6 +482,7 @@ async function init() {
     setTexts(data["displayedTexts"]);
     buildField(data["size"]["cols"], data["size"]["rows"]);
     buildPlayers(data["players"]);
+    DevTools.loadPreference();
 }
 function setTexts(jsonTexts) {
     GameState.texts.winnerSingle = jsonTexts["winnerSingle"];
